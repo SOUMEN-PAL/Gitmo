@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="backgroundBlack">#FF2b3137</color>
+    <color name="ascentColor">#FF24292e</color>
+    <color name="gitGreen">#FF2dba4e</color>
+    <color name="textwhite">#FFfafbfc</color>
+    <color name="border">#FF5A5A5A</color>
+    <color name="forkTabColor">#B3B3B3</color>
 </resources>

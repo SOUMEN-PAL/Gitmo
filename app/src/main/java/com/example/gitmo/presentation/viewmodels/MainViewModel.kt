@@ -19,9 +19,9 @@ import kotlinx.coroutines.launch
 
 class MainViewModel (private val repository: Repository): ViewModel() {
 
-    var currentQuery  = mutableStateOf("Android")
+    var currentQuery  = mutableStateOf("")
     var repoListSTate = MutableStateFlow<RepoListState>(RepoListState.Loading())
-
+    var searchingState = mutableStateOf(false)
 
 
     fun getRepo(query: String): Flow<PagingData<Item>> {
