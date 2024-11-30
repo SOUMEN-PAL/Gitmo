@@ -10,6 +10,7 @@ import androidx.paging.cachedIn
 import com.example.gitmo.data.source.RepoDataSource
 import com.example.gitmo.domain.models.searchedRepoDataModel.Item
 import com.example.gitmo.domain.repository.Repository
+import com.example.gitmo.statesManagers.RepoDataState
 import com.example.gitmo.statesManagers.RepoListState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,9 @@ class MainViewModel (private val repository: Repository): ViewModel() {
     var currentQuery  = mutableStateOf("")
     var repoListSTate = MutableStateFlow<RepoListState>(RepoListState.Loading())
     var searchingState = mutableStateOf(false)
+
+    private val _repoDataState = MutableStateFlow<RepoDataState>(RepoDataState.Loading())
+    val repoDataState = _repoDataState.asStateFlow()
 
 
     fun getRepo(query: String): Flow<PagingData<Item>> {
@@ -42,8 +46,28 @@ class MainViewModel (private val repository: Repository): ViewModel() {
 
     }
 
+    fun formatNumber(number: Int): String {
+        return when {
+            number >= 1000000 -> String.format("%.1fM", number / 1000000.0)
+            number >= 1000 -> String.format("%.1fK", number / 1000.0)
+            else -> number.toString()
+        }
+    }
+
+
     fun resetListState(){
         repoListSTate.value = RepoListState.Loading()
+    }
+
+    fun getRepoDetails(ownerName : String , repoName : String){
+        viewModelScope.launch(Dispatchers.IO) {
+            try{
+                repository.getRepoDetails(ownerName, repoName)
+                _repoDataState.value = RepoDataState.Success(repository.repoInfoState.value)
+            }catch (e : Exception){
+                _repoDataState.value = RepoDataState.Error(e.message.toString())
+            }
+        }
     }
 
 }
