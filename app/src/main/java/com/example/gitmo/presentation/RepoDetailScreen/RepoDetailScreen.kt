@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
@@ -65,7 +67,8 @@ fun RepoDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel,
     ownerName: String,
-    repoName: String
+    repoName: String ,
+    navController: NavController
 ) {
     var isDataLoaded by rememberSaveable { mutableStateOf(false) }
 
@@ -81,6 +84,12 @@ fun RepoDetailScreen(
 
     val dataState by viewModel.repoDataState.collectAsState()
     val contributorState by viewModel.contributorFetchingState.collectAsState()
+
+    BackHandler {
+        viewModel.contributorSearching.value = false
+        navController.popBackStack()
+        viewModel.resetContributorState()
+    }
 
     Column(
         modifier = Modifier

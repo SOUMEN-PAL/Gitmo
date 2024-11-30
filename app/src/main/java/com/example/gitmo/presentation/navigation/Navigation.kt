@@ -29,7 +29,7 @@ fun Navigation(modifier: Modifier = Modifier , viewModel: MainViewModel) {
         ) {backStackEntry ->
             val ownerName = backStackEntry.arguments?.getString("ownerName")
             val repoName = backStackEntry.arguments?.getString("repoName")
-            RepoDetailScreen(viewModel = viewModel, ownerName = ownerName.toString(), repoName = repoName.toString())
+            RepoDetailScreen(viewModel = viewModel, ownerName = ownerName.toString(), repoName = repoName.toString() , navController = navController)
         }
 
     }
