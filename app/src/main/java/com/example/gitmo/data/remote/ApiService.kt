@@ -1,6 +1,7 @@
 package com.example.gitmo.data.remote
 
 import com.example.gitmo.domain.models.contributerModel.ContributerData
+import com.example.gitmo.domain.models.repositoryDataModel.RepositoryDataModel
 import com.example.gitmo.domain.models.searchedRepoDataModel.SearchedRepoData
 import retrofit2.Response
 import retrofit2.http.GET
@@ -21,5 +22,11 @@ interface ApiService {
         @Path("owner") owner: String,
         @Path("repo") repo : String
     ):Response<ContributerData>
+
+    @GET("repos/{owner}/{repo}")
+    suspend fun getRepoDetails(
+        @Path("owner") owner : String,
+        @Path("repo") repo: String
+    ):Response<RepositoryDataModel>
 
 }

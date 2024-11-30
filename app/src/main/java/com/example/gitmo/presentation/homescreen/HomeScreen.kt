@@ -1,6 +1,7 @@
 package com.example.gitmo.presentation.homescreen
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
@@ -52,11 +54,12 @@ import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.example.gitmo.R
 import com.example.gitmo.domain.models.searchedRepoDataModel.Item
+import com.example.gitmo.presentation.navigation.Screens
 import com.example.gitmo.presentation.viewmodels.MainViewModel
 import com.example.gitmo.statesManagers.RepoListState
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
+fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel , navController: NavController) {
     val query = viewModel.currentQuery
     val focusRequester = remember {
         FocusRequester()
@@ -177,7 +180,9 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
                         items(repoList.itemCount) { index ->
                             val items = repoList[index]
                             if (items != null) {
-                                RepoItem(item = items)
+                                RepoItem(item = items , onClick = {ownerName , repoName ->
+                                    navController.navigate(Screens.RepositoryScreen.route + "/$ownerName/$repoName")
+                                })
                             }
                         }
 
@@ -224,7 +229,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
 
 
 @Composable
-fun RepoItem(item: Item) {
+fun RepoItem(item: Item , onClick : (ownerName: String , repoName : String) -> Unit) {
 
     val ownerName = if (item.owner != null && item.owner.login != null) {
         item.owner.login
@@ -253,6 +258,9 @@ fun RepoItem(item: Item) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                onClick(ownerName , repoName)
+            }
             .padding(12.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

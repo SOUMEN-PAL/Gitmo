@@ -35,6 +35,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.gitmo.domain.models.searchedRepoDataModel.Item
 import com.example.gitmo.domain.repository.Repository
 import com.example.gitmo.presentation.homescreen.HomeScreen
+import com.example.gitmo.presentation.navigation.Navigation
 import com.example.gitmo.presentation.viewmodels.MainViewModel
 import com.example.gitmo.presentation.viewmodels.MainViewModelFactory
 import com.example.gitmo.statesManagers.RepoListState
@@ -53,89 +54,91 @@ class MainActivity : ComponentActivity() {
             mainViewModel = viewModel(factory = MainViewModelFactory(repository))
 
             GitmoTheme {
-                HomeScreen(viewModel = mainViewModel)
+                Navigation(viewModel = mainViewModel)
             }
         }
     }
 }
 
-@Composable
-fun RepoItem(item : Item){
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Text(text = item.url)
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = item.name , color = Color.Red)
-        }
-    }
-}
 
-@Composable
-fun dataLog(viewModel: MainViewModel){
-
-
-//    val repoList = viewModel.getRepo("Java").collectAsLazyPagingItems()
 //
-//    LazyColumn {
-//        // ... (Rest of your LazyColumn code) ...
-//        if (repoList != null) {
-//            items(repoList.itemCount) { index ->
-//                val item = repoList[index]
-//                if (item != null) {
-//                    RepoItem(item = item)
-//                } else {
-//                    // Display placeholder or loading indicator
-//                }
-//            }
-//        } else {
-//            // Display initial loading indicator or empty state
+//@Composable
+//fun RepoItem(item : Item){
+//    Column(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(16.dp)
+//    ) {
+//        Text(text = item.url)
+//        Row(
+//            modifier = Modifier.fillMaxWidth()
+//        ) {
+//            Text(text = item.name , color = Color.Red)
 //        }
 //    }
-
-    LaunchedEffect(null) {
-        viewModel.getRepo("Python")
-    }
-
-    val repoListState by viewModel.repoListSTate.collectAsStateWithLifecycle()
-
-    when(repoListState){
-        is RepoListState.Error -> {
-
-        }
-        is RepoListState.Loading -> {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        is RepoListState.Success -> {
-            val repoList = (repoListState as RepoListState.Success).data.collectAsLazyPagingItems()
-            LazyColumn {
-                // ... (Rest of your LazyColumn code) ...
-                if (repoList != null) {
-                    items(repoList.itemCount) { index ->
-                        val item = repoList[index]
-                        if (item != null) {
-                            RepoItem(item = item)
-                        } else {
-                            // Display placeholder or loading indicator
-                        }
-                    }
-                } else {
-                    // Display initial loading indicator or empty state
-                }
-            }
-        }
-    }
-
-}
-
-
+//}
+//
+//@Composable
+//fun dataLog(viewModel: MainViewModel){
+//
+//
+////    val repoList = viewModel.getRepo("Java").collectAsLazyPagingItems()
+////
+////    LazyColumn {
+////        // ... (Rest of your LazyColumn code) ...
+////        if (repoList != null) {
+////            items(repoList.itemCount) { index ->
+////                val item = repoList[index]
+////                if (item != null) {
+////                    RepoItem(item = item)
+////                } else {
+////                    // Display placeholder or loading indicator
+////                }
+////            }
+////        } else {
+////            // Display initial loading indicator or empty state
+////        }
+////    }
+//
+//    LaunchedEffect(null) {
+//        viewModel.getRepo("Python")
+//    }
+//
+//    val repoListState by viewModel.repoListSTate.collectAsStateWithLifecycle()
+//
+//    when(repoListState){
+//        is RepoListState.Error -> {
+//
+//        }
+//        is RepoListState.Loading -> {
+//            Column(
+//                modifier = Modifier.fillMaxSize(),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                CircularProgressIndicator()
+//            }
+//        }
+//        is RepoListState.Success -> {
+//            val repoList = (repoListState as RepoListState.Success).data.collectAsLazyPagingItems()
+//            LazyColumn {
+//                // ... (Rest of your LazyColumn code) ...
+//                if (repoList != null) {
+//                    items(repoList.itemCount) { index ->
+//                        val item = repoList[index]
+//                        if (item != null) {
+//                            RepoItem(item = item)
+//                        } else {
+//                            // Display placeholder or loading indicator
+//                        }
+//                    }
+//                } else {
+//                    // Display initial loading indicator or empty state
+//                }
+//            }
+//        }
+//    }
+//
+//}
+//
+//
