@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -55,6 +57,7 @@ import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.example.gitmo.R
 import com.example.gitmo.presentation.viewmodels.MainViewModel
+import com.example.gitmo.statesManagers.ContributorFetchingState
 import com.example.gitmo.statesManagers.RepoDataState
 
 @Composable
@@ -77,6 +80,7 @@ fun RepoDetailScreen(
     val context = LocalContext.current
 
     val dataState by viewModel.repoDataState.collectAsState()
+    val contributorState by viewModel.contributorFetchingState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -250,7 +254,14 @@ fun RepoDetailScreen(
 
                         Button(
                             onClick = {
-
+                                if(viewModel.contributorSearching.value){
+                                    viewModel.resetContributorState()
+                                    viewModel.contributorSearching.value = false
+                                }
+                                else{
+                                    viewModel.contributorSearching.value = true
+                                    viewModel.getContributorDetails(ownerName, repoName)
+                                }
 
 
                             },
@@ -274,8 +285,60 @@ fun RepoDetailScreen(
                                 fontSize = 24.sp
                             )
                         }
-                        
                     }
+
+                    when(contributorState){
+                        is ContributorFetchingState.Error -> {
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = "Error in fetching Contributors")
+                                }
+
+                            }
+                        }
+                        is ContributorFetchingState.Loading -> {
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(color = colorResource(id = R.color.gitGreen))
+                                }
+                            }
+                        }
+                        is ContributorFetchingState.Success -> {
+                            val contributorsData = (contributorState as ContributorFetchingState.Success).data
+                            if(contributorsData != null){
+                                items(contributorsData.chunked(2)){dataItem->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        dataItem.forEach { item ->
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                ContributorsDataScreen(data = item)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        is ContributorFetchingState.UnTouched -> {
+
+                        }
+                    }
+
+
 
                 }
 

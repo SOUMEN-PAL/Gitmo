@@ -1,6 +1,7 @@
 package com.example.gitmo.domain.repository
 
 import com.example.gitmo.data.remote.ApiService
+import com.example.gitmo.domain.models.contributerModel.ContributerDataItem
 import com.example.gitmo.domain.models.repositoryDataModel.RepositoryDataModel
 import com.example.gitmo.domain.models.searchedRepoDataModel.Item
 import com.example.gitmo.domain.models.searchedRepoDataModel.SearchedRepoData
@@ -16,6 +17,10 @@ class Repository(private val service: ApiService) {
     val repoInfoState = _repoInfoState.asStateFlow()
 
 
+    private val _contributorsData = MutableStateFlow<List<ContributerDataItem>?>(null)
+    val contributorData = _contributorsData.asStateFlow()
+
+
     suspend fun getRepo(query: String, perPage: Int, page: Int): SearchedRepoData {
         delay(1000L)
         val response = service.getRepo(query, perPage, page)
@@ -29,7 +34,15 @@ class Repository(private val service: ApiService) {
             val data = response.body()
             _repoInfoState.value = data
         }
+    }
 
+    suspend fun getContributorData(ownerName: String, repoName: String){
+
+        val response = service.getContributors(owner =  ownerName , repo =  repoName)
+        if(response.isSuccessful){
+            val data = response.body()
+            _contributorsData.value = data
+        }
 
     }
 
