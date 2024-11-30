@@ -14,7 +14,7 @@ interface ApiService {
         @Query("q") query : String,
         @Query("per_page") perPage : Int,
         @Query("page") page : Int
-    ): Response<SearchedRepoData>
+    ): SearchedRepoData
 
     @GET("repos/{owner}/{repo}/contributors")
     suspend fun getContributors(
