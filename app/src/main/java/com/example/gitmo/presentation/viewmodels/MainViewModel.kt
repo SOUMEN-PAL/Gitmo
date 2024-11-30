@@ -42,4 +42,8 @@ class MainViewModel (private val repository: Repository): ViewModel() {
 
     }
 
+    fun resetListState(){
+        repoListSTate.value = RepoListState.Loading()
+    }
+
 }

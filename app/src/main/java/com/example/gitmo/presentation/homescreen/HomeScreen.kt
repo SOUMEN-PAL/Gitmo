@@ -1,5 +1,6 @@
 package com.example.gitmo.presentation.homescreen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,29 +11,41 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.StarRate
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -40,12 +53,16 @@ import coil.transform.CircleCropTransformation
 import com.example.gitmo.R
 import com.example.gitmo.domain.models.searchedRepoDataModel.Item
 import com.example.gitmo.presentation.viewmodels.MainViewModel
+import com.example.gitmo.statesManagers.RepoListState
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
-    val query = remember {
-        mutableStateOf("")
+    val query = viewModel.currentQuery
+    val focusRequester = remember {
+        FocusRequester()
     }
+    var isFocused by rememberSaveable { mutableStateOf(viewModel.searchingState.value) }
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
         modifier = Modifier
@@ -55,11 +72,19 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
 
         topBar = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, bottom = 8.dp, top = 8.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Gitmo", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Gitmo",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(8.dp)
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -67,25 +92,56 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
+                        modifier = Modifier.weight(8f),
                         value = query.value,
+                        singleLine = true,
                         onValueChange = {
                             query.value = it
-                        }
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = colorResource(id = R.color.ascentColor),
+                            unfocusedContainerColor = colorResource(id = R.color.ascentColor),
+                            focusedTextColor = colorResource(id = R.color.white),
+                            focusedBorderColor = colorResource(id = R.color.gitGreen),
+                            cursorColor = colorResource(id = R.color.forkTabColor)
+                        )
                     )
 
-                    IconButton(onClick = {
-                        if (viewModel.searchingState.value) {
-                            viewModel.searchingState.value = false
-                        } else {
-                            viewModel.searchingState.value = true
-                        }
+                    IconButton(
+                        onClick = {
 
-                    }) {
+                            if (viewModel.searchingState.value) {
+                                viewModel.searchingState.value = false
+                                viewModel.currentQuery.value = ""
+                                viewModel.resetListState()
+                                focusManager.clearFocus()
+                            } else {
+                                if (query.value != "" && viewModel.searchingState.value == false) {
+                                    viewModel.searchingState.value = true
+                                    viewModel.getRepo(query.value)
+                                }
+
+                            }
+
+                        },
+                        modifier = Modifier.weight(2f),
+                    ) {
                         if (viewModel.searchingState.value) {
-                            Icon(imageVector = Icons.Filled.Cancel, contentDescription = "Search")
+                            Icon(
+                                imageVector = Icons.Filled.Cancel,
+                                contentDescription = "Cancel",
+                                modifier = Modifier.fillMaxSize(),
+                                tint = Color.White
+                            )
 
                         } else {
-                            Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "Search",
+                                modifier = Modifier.fillMaxSize(),
+                                tint = Color.White
+                            )
                         }
                     }
                 }
@@ -94,20 +150,75 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainViewModel) {
 
     ) { itPadding ->
         Column(
-            modifier = Modifier.padding(itPadding)
+            modifier = Modifier.padding(itPadding),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (viewModel.searchingState.value && query.value != "") {
-                val repoList = viewModel.getRepo(query.value).collectAsLazyPagingItems()
-                LazyColumn {
-                    items(repoList.itemCount) { index ->
-                        val items = repoList[index]
-                        if (items != null) {
-                            RepoItem(item = items)
+
+            val repoListState by viewModel.repoListSTate.collectAsStateWithLifecycle()
+
+            when (repoListState) {
+                is RepoListState.Error -> {
+                    Text(text = "Error in fetching Data")
+                }
+
+                is RepoListState.Loading -> {
+
+                }
+
+                is RepoListState.Success -> {
+                    val repoList =
+                        (repoListState as RepoListState.Success).data.collectAsLazyPagingItems()
+                    LazyColumn(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(repoList.itemCount) { index ->
+                            val items = repoList[index]
+                            if (items != null) {
+                                RepoItem(item = items)
+                            }
                         }
+
+                        when {
+                            repoList.loadState.refresh is LoadState.Loading -> {
+                                item { CircularProgressIndicator(color = colorResource(id = R.color.gitGreen)) }
+                            }
+
+                            repoList.loadState.append is LoadState.Loading -> {
+                                item { CircularProgressIndicator(color = colorResource(id = R.color.gitGreen)) }
+                            }
+
+                            repoList.loadState.refresh is LoadState.Error -> {
+                                item { Text("Error loading data") }
+                            }
+
+                            repoList.loadState.append is LoadState.Error -> {
+                                item {
+                                    Button(onClick = { repoList.retry() }) {
+                                        Text("Retry")
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
             }
         }
+
+//            if (viewModel.searchingState.value && query.value != "") {
+//                val repoList = viewModel.getRepo(query.value).collectAsLazyPagingItems()
+//                LazyColumn {
+//                    items(repoList.itemCount) { index ->
+//                        val items = repoList[index]
+//                        if (items != null) {
+//                            RepoItem(item = items)
+//                        }
+//                    }
+//                }
+//            }
     }
 }
 
